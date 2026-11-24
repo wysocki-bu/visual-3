@@ -1,37 +1,24 @@
-import pandas as pd
-import plotly.graph_objects as go
 import streamlit as st
-import yfinance as yf
+import plotly.graph_objects as go
+import pandas as pd
 
-st.set_page_config(page_title="Stock Candlestick Chart", layout="wide")
-st.title("Interactive Candlestick Stock Chart")
+st.title("Apple Stock Candlestick Chart")
 
-ticker = st.sidebar.text_input("Ticker Symbol", value="AAPL").upper()
-start_date = st.sidebar.date_input("Start Date", value=pd.to_datetime("2024-01-01"))
-end_date = st.sidebar.date_input("End Date", value=pd.Timestamp.today())
+# Cache the data so it doesn't reload on every interaction
+@st.cache_data
+def load_data():
+    url = 'https://raw.githubusercontent.com/plotly/datasets/master/finance-charts-apple.csv'
+    return pd.read_csv(url)
 
-data = yf.download(ticker, start=start_date, end=end_date, multi_level_index=False)
+df = load_data()
 
-if not data.empty:
-    fig = go.Figure(
-        data=[
-            go.Candlestick(
-                x=data.index,
-                open=data["Open"],
-                high=data["High"],
-                low=data["Low"],
-                close=data["Close"],
-                name=ticker,
-            )
-        ]
-    )
-    fig.update_layout(
-        title=f"{ticker} Candlestick Chart",
-        xaxis_title="Date",
-        yaxis_title="Price (USD)",
-        xaxis_rangeslider_visible=False,
-        height=600,
-    )
-    st.plotly_chart(fig, use_container_width=True)
-else:
-    st.warning("No data found for the selected ticker and date range.")
+fig = go.Figure(data=[go.Candlestick(
+    x=df['Date'],
+    open=df['AAPL.Open'],
+    high=df['AAPL.High'],
+    low=df['AAPL.Low'],
+    close=df['AAPL.Close']
+)])
+
+# Render the Plotly figure in Streamlit
+st.plotly_chart(fig, use_container_width=True)
